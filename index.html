@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Valentine</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Protest+Riot&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        font-family:
+          "Protest Riot", system-ui, Avenir, Helvetica, Arial, sans-serif;
+        background: linear-gradient(135deg, #ffe6eb, #fff5f7, #ffffff);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .gif-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.3;
+        z-index: 0;
+        pointer-events: none;
+        /* Add transition for smooth blurring */
+        transition: filter 0.8s ease;
+      }
+
+      #hearts-container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        pointer-events: none;
+        /* Add transition for smooth blurring */
+        transition: filter 0.8s ease;
+      }
+
+      /* The class that will be added via JS */
+      .blurred {
+        filter: blur(10px);
+      }
+
+      .heart {
+        position: absolute;
+        font-size: 2rem;
+        opacity: 0.7;
+        animation: float ease-in infinite;
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(100vh);
+          opacity: 0;
+        }
+        10% {
+          opacity: 0.7;
+        }
+        90% {
+          opacity: 0.7;
+        }
+        100% {
+          transform: translateY(-100vh) translateX(100px);
+          opacity: 0;
+        }
+      }
+
+      .card {
+        position: relative;
+        z-index: 2;
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        width: 350px; /* Set a fixed width for a cleaner look */
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        /* Ensure the card itself stays sharp */
+        filter: none;
+      }
+
+      .card img {
+        width: 200px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+      }
+
+      button {
+        padding: 12px 25px;
+        margin: 10px;
+        border: none;
+        border-radius: 10px;
+        font-size: 18px;
+        cursor: pointer;
+      }
+
+      #yes-btn {
+        background: #22c55e;
+        color: white;
+      }
+
+      #no-btn {
+        background: #ef4444;
+        color: white;
+        transition:
+          left 0.3s ease,
+          top 0.3s ease;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .fall-text {
+        position: fixed;
+        top: -50px;
+        font-size: 24px;
+        font-weight: bold;
+        animation: fallDown 2s linear forwards;
+        z-index: 999;
+      }
+
+      @keyframes fallDown {
+        to {
+          transform: translateY(110vh);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <img
+      class="gif-background"
+      src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExczJzbDNyMHFvZ2M4bzRpN3VieDdud3RwdHVnYzV1eThldTBweDB1cCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/jaak8YgQiIOzXEVbtn/giphy.gif"
+    />
+
+    <div id="hearts-container"></div>
+
+    <div class="card">
+      <div id="question-content">
+        <img src="./assets/cat.jpg" alt="cute cat" />
+        <h2>Will you be my Valentine?</h2>
+        <button id="yes-btn">Yes ❤️</button>
+        <button id="no-btn">No 😢</button>
+      </div>
+
+      <div id="response" class="hidden"></div>
+    </div>
+
+    <script>
+      const hearts = ["❤️", "♥️", "💕", "💘"];
+      const yesBtn = document.getElementById("yes-btn");
+      const noBtn = document.getElementById("no-btn");
+      const response = document.getElementById("response");
+      const questionContent = document.getElementById("question-content");
+      // Get references to background elements
+      const gifBackground = document.querySelector(".gif-background");
+      const heartsContainer = document.getElementById("hearts-container");
+
+      let floatingMode = false;
+
+      function createHeart() {
+        const heart = document.createElement("div");
+        heart.className = "heart";
+        heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+        heart.style.left = Math.random() * 100 + "%";
+        heart.style.animationDuration = Math.random() * 4 + 6 + "s";
+        document.getElementById("hearts-container").appendChild(heart);
+        setTimeout(() => heart.remove(), 9000);
+      }
+      setInterval(createHeart, 200);
+
+      function dropText() {
+        const text = document.createElement("div");
+        text.className = "fall-text";
+        text.textContent = "Cheeeeeeeeeeee🤧🤧🤧";
+        text.style.left = Math.random() * window.innerWidth + "px";
+        document.body.appendChild(text);
+        setTimeout(() => text.remove(), 2000);
+      }
+
+      /* YES click → Clear form, show gif, and BLUR background */
+      yesBtn.onclick = () => {
+        questionContent.classList.add("hidden"); // Hides the cat, text, and buttons
+        response.innerHTML = `
+          <img src="https://media.tenor.com/gUiu1zyxfzYAAAAi/bear-kiss-bear-kisses.gif" style="width: 100%;">
+          <h2 style="color: #e91e63;">Yay! Happy Valentine's! ❤️</h2>
+        `;
+        response.classList.remove("hidden");
+
+        // Add blur class to background elements
+        gifBackground.classList.add("blurred");
+        heartsContainer.classList.add("blurred");
+      };
+
+      noBtn.onclick = () => dropText();
+
+      noBtn.addEventListener("mouseenter", () => {
+        if (!floatingMode) {
+          floatingMode = true;
+          noBtn.style.position = "fixed";
+          dropText();
+        }
+      });
+
+      document.addEventListener("mousemove", (e) => {
+        if (!floatingMode) return;
+        const rect = noBtn.getBoundingClientRect();
+        const buttonX = rect.left + rect.width / 2;
+        const buttonY = rect.top + rect.height / 2;
+        const distance = Math.hypot(e.clientX - buttonX, e.clientY - buttonY);
+
+        if (distance < 150) {
+          const angle = Math.atan2(buttonY - e.clientY, buttonX - e.clientX);
+          let newX = rect.left + Math.cos(angle) * 150;
+          let newY = rect.top + Math.sin(angle) * 150;
+
+          newX = Math.max(
+            20,
+            Math.min(window.innerWidth - rect.width - 20, newX),
+          );
+          newY = Math.max(
+            20,
+            Math.min(window.innerHeight - rect.height - 20, newY),
+          );
+
+          noBtn.style.left = newX + "px";
+          noBtn.style.top = newY + "px";
+        }
+      });
+    </script>
+  </body>
+</html>
