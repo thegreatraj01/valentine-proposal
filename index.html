@@ -2,6 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
     <title>Be My Valentine</title>
     <link
       rel="icon"
@@ -13,58 +17,60 @@
     />
 
     <style>
-      body {
+      /* Prevent padding from adding to width */
+      * {
+        box-sizing: border-box;
         margin: 0;
-        height: 100vh;
-        font-family:
-          "Protest Riot", system-ui, Avenir, Helvetica, Arial, sans-serif;
+        padding: 0;
+      }
+
+      body {
+        /* Use dvh for mobile address bar support */
+        height: 100dvh;
+        width: 100vw;
+        font-family: "Protest Riot", sans-serif;
         background: linear-gradient(135deg, #ffe6eb, #fff5f7, #ffffff);
         position: relative;
-        overflow: hidden;
+        overflow: hidden; /* Hard lock on scrolling */
         display: flex;
         justify-content: center;
         align-items: center;
+        touch-action: none; /* Prevents pull-to-refresh and zooming */
       }
 
       .gif-background {
         position: absolute;
-        top: 0;
-        left: 0;
+        inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
         opacity: 0.3;
         z-index: 0;
         pointer-events: none;
-        /* Add transition for smooth blurring */
         transition: filter 0.8s ease;
       }
 
       #hearts-container {
         position: absolute;
-        width: 100%;
-        height: 100%;
+        inset: 0;
         z-index: 1;
         pointer-events: none;
-        /* Add transition for smooth blurring */
-        transition: filter 0.8s ease;
       }
 
-      /* The class that will be added via JS */
       .blurred {
         filter: blur(10px);
       }
 
       .heart {
         position: absolute;
-        font-size: 2rem;
+        font-size: 1.5rem;
         opacity: 0.7;
-        animation: float ease-in infinite;
+        animation: float linear infinite;
       }
 
       @keyframes float {
         0% {
-          transform: translateY(100vh);
+          transform: translateY(110dvh);
           opacity: 0;
         }
         10% {
@@ -74,7 +80,7 @@
           opacity: 0.7;
         }
         100% {
-          transform: translateY(-100vh) translateX(100px);
+          transform: translateY(-20dvh) translateX(30px);
           opacity: 0;
         }
       }
@@ -83,41 +89,52 @@
         position: relative;
         z-index: 2;
         background: white;
-        padding: 30px;
+        padding: 2rem;
         border-radius: 20px;
-        width: 350px; /* Set a fixed width for a cleaner look */
+        width: 90%;
+        max-width: 380px;
         text-align: center;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        /* Ensure the card itself stays sharp */
-        filter: none;
       }
 
       .card img {
-        width: 200px;
+        width: 150px;
+        height: auto;
         border-radius: 12px;
-        margin-bottom: 10px;
+        margin-bottom: 1rem;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: #333;
+      }
+
+      .btn-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
       }
 
       button {
-        padding: 12px 25px;
-        margin: 10px;
+        padding: 12px 24px;
         border: none;
         border-radius: 10px;
-        font-size: 18px;
+        font-size: 1.1rem;
         cursor: pointer;
+        font-family: inherit;
+        touch-action: manipulation;
       }
 
       #yes-btn {
         background: #22c55e;
         color: white;
       }
-
       #no-btn {
         background: #ef4444;
         color: white;
-        transition:
-          left 0.3s ease,
-          top 0.3s ease;
+        transition: transform 0.2s ease;
       }
 
       .hidden {
@@ -126,16 +143,15 @@
 
       .fall-text {
         position: fixed;
-        top: -50px;
-        font-size: 24px;
         font-weight: bold;
-        animation: fallDown 2s linear forwards;
         z-index: 999;
+        pointer-events: none;
+        animation: fallDown 2s linear forwards;
       }
 
       @keyframes fallDown {
         to {
-          transform: translateY(110vh);
+          transform: translateY(110dvh);
           opacity: 0;
         }
       }
@@ -152,96 +168,97 @@
 
     <div class="card">
       <div id="question-content">
-        <img src="./assets/cat.jpg" alt="cute cat" />
+        <img src="./assets/cat.jpg" alt="cat" />
         <h2>Will you be my Valentine?</h2>
-        <button id="yes-btn">Yes ❤️</button>
-        <button id="no-btn">No 😢</button>
+        <div class="btn-container">
+          <button id="yes-btn">Yes ❤️</button>
+          <button id="no-btn">No 😢</button>
+        </div>
       </div>
-
       <div id="response" class="hidden"></div>
     </div>
 
     <script>
-      const hearts = ["❤️", "♥️", "💕", "💘"];
-      const yesBtn = document.getElementById("yes-btn");
       const noBtn = document.getElementById("no-btn");
+      const yesBtn = document.getElementById("yes-btn");
       const response = document.getElementById("response");
       const questionContent = document.getElementById("question-content");
-      // Get references to background elements
-      const gifBackground = document.querySelector(".gif-background");
       const heartsContainer = document.getElementById("hearts-container");
+      const gifBg = document.querySelector(".gif-background");
 
       let floatingMode = false;
 
+      // Create falling hearts
       function createHeart() {
         const heart = document.createElement("div");
         heart.className = "heart";
-        heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+        heart.textContent = ["❤️", "💖", "💕", "💘"][
+          Math.floor(Math.random() * 4)
+        ];
         heart.style.left = Math.random() * 100 + "%";
-        heart.style.animationDuration = Math.random() * 4 + 6 + "s";
-        document.getElementById("hearts-container").appendChild(heart);
-        setTimeout(() => heart.remove(), 9000);
+        heart.style.animationDuration = Math.random() * 3 + 4 + "s";
+        heartsContainer.appendChild(heart);
+        setTimeout(() => heart.remove(), 7000);
       }
-      setInterval(createHeart, 200);
+      setInterval(createHeart, 400);
 
       function dropText() {
         const text = document.createElement("div");
         text.className = "fall-text";
-        text.textContent = "Cheeeeeeeeeeee🤧🤧🤧";
-        text.style.left = Math.random() * window.innerWidth + "px";
+        text.textContent = "Cheeeeeeeeeeee🤧";
+        text.style.left = Math.random() * 80 + "%";
+        text.style.top = "-50px";
         document.body.appendChild(text);
         setTimeout(() => text.remove(), 2000);
       }
 
-      /* YES click → Clear form, show gif, and BLUR background */
-      yesBtn.onclick = () => {
-        questionContent.classList.add("hidden"); // Hides the cat, text, and buttons
-        response.innerHTML = `
-          <img src="https://media.tenor.com/gUiu1zyxfzYAAAAi/bear-kiss-bear-kisses.gif" style="width: 100%;">
-          <h2 style="color: #e91e63;">Yay! Happy Valentine's! ❤️</h2>
-        `;
-        response.classList.remove("hidden");
-
-        // Add blur class to background elements
-        gifBackground.classList.add("blurred");
-        heartsContainer.classList.add("blurred");
-      };
-
-      noBtn.onclick = () => dropText();
-
-      noBtn.addEventListener("mouseenter", () => {
+      function moveButton() {
         if (!floatingMode) {
           floatingMode = true;
           noBtn.style.position = "fixed";
-          dropText();
+          noBtn.style.zIndex = "1000";
         }
+        dropText();
+
+        // Calculate safe boundaries (keeping it 50px away from edges)
+        const btnWidth = noBtn.offsetWidth;
+        const btnHeight = noBtn.offsetHeight;
+        const maxX = window.innerWidth - btnWidth - 50;
+        const maxY = window.innerHeight - btnHeight - 50;
+
+        const randomX = Math.max(50, Math.floor(Math.random() * maxX));
+        const randomY = Math.max(50, Math.floor(Math.random() * maxY));
+
+        noBtn.style.left = randomX + "px";
+        noBtn.style.top = randomY + "px";
+      }
+
+      // NO Button Interactions
+      noBtn.addEventListener("mouseover", () => {
+        if (window.innerWidth > 800) moveButton(); // Only run on mouse for desktop
       });
 
-      document.addEventListener("mousemove", (e) => {
-        if (!floatingMode) return;
-        const rect = noBtn.getBoundingClientRect();
-        const buttonX = rect.left + rect.width / 2;
-        const buttonY = rect.top + rect.height / 2;
-        const distance = Math.hypot(e.clientX - buttonX, e.clientY - buttonY);
-
-        if (distance < 150) {
-          const angle = Math.atan2(buttonY - e.clientY, buttonX - e.clientX);
-          let newX = rect.left + Math.cos(angle) * 150;
-          let newY = rect.top + Math.sin(angle) * 150;
-
-          newX = Math.max(
-            20,
-            Math.min(window.innerWidth - rect.width - 20, newX),
-          );
-          newY = Math.max(
-            20,
-            Math.min(window.innerHeight - rect.height - 20, newY),
-          );
-
-          noBtn.style.left = newX + "px";
-          noBtn.style.top = newY + "px";
-        }
+      noBtn.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        moveButton();
       });
+
+      noBtn.onclick = (e) => {
+        e.preventDefault();
+        moveButton();
+      };
+
+      // YES Button Interaction
+      yesBtn.onclick = () => {
+        questionContent.classList.add("hidden");
+        response.innerHTML = `
+          <img src="https://media.tenor.com/gUiu1zyxfzYAAAAi/bear-kiss-bear-kisses.gif" style="width: 100%; max-width: 250px;">
+          <h2 style="color: #e91e63; margin-top: 15px;">Yay! Happy Valentine's! ❤️</h2>
+        `;
+        response.classList.remove("hidden");
+        gifBg.classList.add("blurred");
+        heartsContainer.classList.add("blurred");
+      };
     </script>
   </body>
 </html>
